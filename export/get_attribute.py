@@ -1,0 +1,163 @@
+"""
+Script to get an attribute for a list of devices from ThingsBoard.
+
+The first column of the CSV file is the attribute to match on (e.g., `serialNumber`).
+
+Example usage:
+
+    # get attribute `<attribute_key>` for devices listed in test.csv
+    uv run python get_attribute.py \
+        --host https://<hostname> \
+        --username "<email>" --password "***" \
+        --csv <test.csv> \
+        --attribute <attribute_key>
+"""
+
+import argparse
+import logging
+
+import pandas as pd
+from tb_rest_client.rest_client_pe import (
+    RestClientPE,
+)
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+
+def get_attribute(
+    client: RestClientPE,
+    match_attribute_key: str,
+    match_attribute_value: str,
+    get_attribute_key: str,
+) -> str:
+    """Query the attribute `get_attribute_key` for the given attribute `match_attribute_[key|value]`.
+
+    Searches for devices where `match_attribute_key == match_attribute_value`
+    and returns the value of `get_attribute_key` attribute for that device.
+
+    Uses the entities query API of ThingsBoard.
+
+    Limitations: Works only for match_attribute_value of type STRING.
+    Adapt the query if you need other types.
+    """
+    query = {
+        "entityFilter": {
+            "type": "entityType",
+            "resolveMultiple": True,
+            "entityType": "DEVICE",
+        },
+        "entityFields": [
+            {"type": "ENTITY_FIELD", "key": "name"},
+        ],
+        "latestValues": [
+            {"type": "ATTRIBUTE", "key": match_attribute_key},
+            {"type": "ATTRIBUTE", "key": get_attribute_key},
+        ],
+        "keyFilters": [
+            {
+                "key": {"type": "ATTRIBUTE", "key": match_attribute_key},
+                "valueType": "STRING",
+                "predicate": {
+                    "operation": "EQUAL",
+                    "value": {
+                        "defaultValue": match_attribute_value,
+                        "dynamicValue": None,
+                    },
+                    "type": "STRING",
+                },
+            }
+        ],
+        "pageLink": {"page": 0, "pageSize": 2},
+    }
+    logging.debug(f"Querying device: {query}")
+
+    res = client.entity_query_controller.find_entity_data_by_query_using_post(
+        body=query,
+    )
+    if len(res.data) != 1:
+        raise ValueError(
+            f"Expected exactly one device with {match_attribute_key} '{match_attribute_value}'"
+            ", found {len(res.data)}"
+        )
+
+    logging.debug(
+        f"Found device {res.data[0].entity_id.id}: {res.data[0].latest['ATTRIBUTE']}"
+    )
+    logging.debug(
+        f"{match_attribute_value} -> {res.data[0].latest['ATTRIBUTE'][get_attribute_key].value}"
+    )
+    return res.data[0].latest["ATTRIBUTE"][get_attribute_key].value
+
+
+if __name__ == "__main__":
+    # arguments
+    argparser = argparse.ArgumentParser(description="Export Attribute")
+    argparser.add_argument(
+        "--host",
+        type=str,
+        help="ThingsBoard host, e.g. https://demo.thingsboard.io",
+        required=True,
+    )
+    argparser.add_argument(
+        "--username", type=str, help="ThingsBoard username", required=True
+    )
+    argparser.add_argument(
+        "--password", type=str, help="ThingsBoard password", required=True
+    )
+    argparser.add_argument(
+        "--csv",
+        type=str,
+        required=True,
+        help="Path to the CSV file (requires column '<')",
+    )
+    argparser.add_argument(
+        "--attribute",
+        type=str,
+        help="Attribute to search and append per row",
+        required=True,
+    )
+    argparser.add_argument(
+        "--verbose", "-v", action="store_true", help="Enable debug logging"
+    )
+    args = argparser.parse_args()
+
+    logging.getLogger().setLevel(logging.DEBUG if args.verbose else logging.INFO)
+    logging.debug(f"Arguments: {args}")
+
+    # tb rest/http client
+    tb = RestClientPE(
+        base_url=args.host,
+    )
+    logging.info(f"Connecting to ThingsBoard {args.host} as user {args.username}")
+    tb.login(args.username, args.password)
+
+    # read csv file
+    df = pd.read_csv(args.csv)
+
+    # first column is the attribute to match on
+    match_attribute_key = df.columns[0]
+    logging.info(f"Using '{match_attribute_key}' as matching attribute.")
+
+    # drop rows with missing match attribute
+    df = df.dropna(subset=[match_attribute_key])
+    logging.info(f"Loaded {len(df)} rows from CSV file.")
+    logging.debug(f"Dataframe:\n{df}")
+
+    # get attribute for each row
+    df[args.attribute] = df[match_attribute_key].apply(
+        lambda row: get_attribute(
+            tb,
+            match_attribute_key,
+            str(row),
+            args.attribute,
+        ),
+    )
+    logging.info(f"Enriched dataframe with attribute '{args.attribute}'.")
+    logging.debug(f"Enriched Dataframe:\n{df}")
+
+    # save to csv
+    output_csv = args.csv.replace(".csv", f"_with_{args.attribute}.csv")
+    df.to_csv(output_csv, index=False)
+    logging.info(f"Saved enriched data to '{output_csv}'.")

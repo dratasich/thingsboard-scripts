@@ -1,7 +1,10 @@
 # thingsboard-scripts
 
 Contents:
-* device: simulates a device
+* device
+  * echo attribute updates
+* export
+  * get attribute per device name (from devices in a csv list)
 
 ## Run
 
