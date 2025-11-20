@@ -62,10 +62,11 @@ indent-width = 4
 
 [tool.ruff.lint]
 # https://docs.astral.sh/ruff/linter/#rule-selection
-#select = ["E", "F", "UP", "B", "SIM", "I"]
-select = ["E"]
-#select = ["ALL"]
-ignore = []
+select = ["ALL"]
+ignore = [
+    "T201",  # print statements
+    "INP001",  # ignore __init__.py complaints, as we just structured scripts into subfolders
+]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]

@@ -28,13 +28,12 @@ argparser.add_argument("--port", type=int, help="MQTT broker port")
 argparser.add_argument("--access-token", type=str, help="Device access token")
 args = argparser.parse_args()
 
-
 # defaults
 desired_attributes = ["test1", "test2", "test3"]
 
 
 # The callback for when the client receives a CONNACK response from the server.
-def on_connect(client, userdata, flags, reason_code, properties):
+def on_connect(client, userdata, flags, reason_code, properties):  # noqa: ANN001, ANN201, ARG001, D103
     print(f"Connected with result code {reason_code}")
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
@@ -43,14 +42,14 @@ def on_connect(client, userdata, flags, reason_code, properties):
 
 
 # The callback for when a PUBLISH message is received from the server.
-def on_message(client, userdata, msg):
-    global desired_attributes
+def on_message(client, userdata, msg):  # noqa: ANN001, ANN201, ARG001, D103
+    global desired_attributes  # noqa: PLW0603
     print("<<< " + msg.topic + " " + str(msg.payload))
     if msg.topic.startswith("v1/devices/me/attributes/response/"):
         desired_attributes = json.loads(msg.payload)["shared"]
 
 
-def publish(client: mqtt.Client, topic: str, msg: str):
+def publish(client: mqtt.Client, topic: str, msg: str) -> None:  # noqa: D103
     print(">>> " + topic + " " + msg)
     client.publish(topic, msg)
 

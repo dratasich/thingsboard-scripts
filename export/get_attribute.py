@@ -21,6 +21,7 @@ from tb_rest_client.rest_client_pe import (
     RestClientPE,
 )
 
+logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -72,22 +73,25 @@ def get_attribute(
         ],
         "pageLink": {"page": 0, "pageSize": 2},
     }
-    logging.debug(f"Querying device: {query}")
+    logger.debug("Querying device: %s", query)
 
     res = client.entity_query_controller.find_entity_data_by_query_using_post(
         body=query,
     )
     if len(res.data) != 1:
-        raise ValueError(
-            f"Expected exactly one device with {match_attribute_key} ",
-            f"'{match_attribute_value}'",
-            ", found {len(res.data)}",
+        msg = (
+            f"Expected exactly one device with {match_attribute_key} "
+            + match_attribute_value
+            + f", found {len(res.data)}"
         )
+        raise ValueError(msg)
 
-    logging.debug(
-        f"Found device {res.data[0].entity_id.id}: {res.data[0].latest['ATTRIBUTE']}",
+    logger.debug(
+        "Found device %s: %s",
+        res.data[0].entity_id.id,
+        res.data[0].latest["ATTRIBUTE"],
     )
-    logging.debug(
+    logger.debug(
         "%s -> %s",
         match_attribute_value,
         res.data[0].latest["ATTRIBUTE"][get_attribute_key].value,
@@ -136,14 +140,14 @@ if __name__ == "__main__":
     )
     args = argparser.parse_args()
 
-    logging.getLogger().setLevel(logging.DEBUG if args.verbose else logging.INFO)
-    logging.debug(f"Arguments: {args}")
+    logger.setLevel(logging.DEBUG if args.verbose else logging.INFO)
+    logger.debug("Arguments: %s", args)
 
     # tb rest/http client
     tb = RestClientPE(
         base_url=args.host,
     )
-    logging.info(f"Connecting to ThingsBoard {args.host} as user {args.username}")
+    logger.info("Connecting to ThingsBoard %s as user %s", args.host, args.username)
     tb.login(args.username, args.password)
 
     # read csv file
@@ -151,12 +155,12 @@ if __name__ == "__main__":
 
     # first column is the attribute to match on
     match_attribute_key = df.columns[0]
-    logging.info(f"Using '{match_attribute_key}' as matching attribute.")
+    logger.info("Using '%s' as matching attribute.", match_attribute_key)
 
     # drop rows with missing match attribute
     df = df.dropna(subset=[match_attribute_key])
-    logging.info(f"Loaded {len(df)} rows from CSV file.")
-    logging.debug(f"Dataframe:\n{df}")
+    logger.info("Loaded %d rows from CSV file.", len(df))
+    logger.debug("Dataframe:\n%s", df)
 
     # get attribute for each row
     df[args.attribute] = df[match_attribute_key].apply(
@@ -167,10 +171,10 @@ if __name__ == "__main__":
             args.attribute,
         ),
     )
-    logging.info(f"Enriched dataframe with attribute '{args.attribute}'.")
-    logging.debug(f"Enriched Dataframe:\n{df}")
+    logger.info("Enriched dataframe with attribute '%s'.", args.attribute)
+    logger.debug("Enriched Dataframe:\n%s", df)
 
     # save to csv
     output_csv = args.csv.replace(".csv", f"_with_{args.attribute}.csv")
     df.to_csv(output_csv, index=False)
-    logging.info(f"Saved enriched data to '{output_csv}'.")
+    logger.info("Saved enriched data to '%s'.", output_csv)
