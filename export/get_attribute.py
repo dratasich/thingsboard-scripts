@@ -11,6 +11,9 @@ python get_attribute.py \
     --csv <test.csv> \
     --attribute <attribute_key>
 ```
+
+!!! Note that in debug mode `-v` this will log
+sensitive information such as username and password !!!
 """
 
 import argparse
@@ -141,7 +144,7 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     logger.setLevel(logging.DEBUG if args.verbose else logging.INFO)
-    logger.debug("Arguments: %s", args)
+    logger.debug("Arguments: %s", args)  # note this logs sensitive info in debug mode!
 
     # tb rest/http client
     tb = RestClientPE(
