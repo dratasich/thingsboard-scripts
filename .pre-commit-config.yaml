@@ -1,0 +1,30 @@
+default_install_hook_types:
+  - pre-commit
+# Repos are manually mirrored from github on private repo, to be reachable behind proxy
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.5
+    hooks:
+      - id: ruff-format
+        stages: [pre-commit]
+      - id: ruff
+        args: ["--fix"]
+        types_or: [python, pyi] # Removed jupyter
+        stages: [pre-commit]
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.9.10
+    hooks:
+      - id: uv-lock
+        stages: [pre-commit]
+      - id: uv-export  # No extras in requirements.txt
+        args: ["-o", "requirements.txt", "--no-dev", "--no-hashes", "--no-emit-project", "--no-header", "--no-annotate"]
+        stages: [pre-commit]
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: system
+        types: [python]
+        files: .
+        stages: [pre-commit]  # Change to pre-push for performance?
