@@ -1,24 +1,25 @@
-"""
-Echo device attribute changes via MQTT.
+"""Echo device attribute changes via MQTT.
 
 We use the paho library to show how to communicate with ThingsBoard via MQTT,
 without the abstraction of the tb-mqtt-client library
 (should be applicable to other coding languages).
 
 ```
-python device/echo_attribute_updates.py --host demo.thingsboard.io --port 1883 --access-token YOUR_DEVICE_ACCESS_TOKEN
+python device/echo_attribute_updates.py \
+    --host demo.thingsboard.io --port 1883 \
+    --access-token YOUR_DEVICE_ACCESS_TOKEN
 ```
 
-See also:
+See Also:
 - https://pypi.org/project/paho-mqtt/#getting-started
+
 """
 
+import argparse
 import json
 from time import sleep
-import argparse
 
 import paho.mqtt.client as mqtt
-
 
 # parse command line arguments
 argparser = argparse.ArgumentParser()

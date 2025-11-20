@@ -1,16 +1,16 @@
-"""
-Script to get an attribute for a list of devices from ThingsBoard.
+"""Script to get an attribute for a list of devices from ThingsBoard.
 
 The first column of the CSV file is the attribute to match on (e.g., `serialNumber`).
 
 Example usage:
-
-    # get attribute `<attribute_key>` for devices listed in test.csv
-    uv run python get_attribute.py \
-        --host https://<hostname> \
-        --username "<email>" --password "***" \
-        --csv <test.csv> \
-        --attribute <attribute_key>
+```
+# get attribute `<attribute_key>` for devices listed in test.csv
+python get_attribute.py \
+    --host https://<hostname> \
+    --username "<email>" --password "***" \
+    --csv <test.csv> \
+    --attribute <attribute_key>
+```
 """
 
 import argparse
@@ -22,7 +22,8 @@ from tb_rest_client.rest_client_pe import (
 )
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
 
@@ -32,7 +33,7 @@ def get_attribute(
     match_attribute_value: str,
     get_attribute_key: str,
 ) -> str:
-    """Query the attribute `get_attribute_key` for the given attribute `match_attribute_[key|value]`.
+    """Query an attribute given another's value per device.
 
     Searches for devices where `match_attribute_key == match_attribute_value`
     and returns the value of `get_attribute_key` attribute for that device.
@@ -67,7 +68,7 @@ def get_attribute(
                     },
                     "type": "STRING",
                 },
-            }
+            },
         ],
         "pageLink": {"page": 0, "pageSize": 2},
     }
@@ -78,15 +79,18 @@ def get_attribute(
     )
     if len(res.data) != 1:
         raise ValueError(
-            f"Expected exactly one device with {match_attribute_key} '{match_attribute_value}'"
-            ", found {len(res.data)}"
+            f"Expected exactly one device with {match_attribute_key} ",
+            f"'{match_attribute_value}'",
+            ", found {len(res.data)}",
         )
 
     logging.debug(
-        f"Found device {res.data[0].entity_id.id}: {res.data[0].latest['ATTRIBUTE']}"
+        f"Found device {res.data[0].entity_id.id}: {res.data[0].latest['ATTRIBUTE']}",
     )
     logging.debug(
-        f"{match_attribute_value} -> {res.data[0].latest['ATTRIBUTE'][get_attribute_key].value}"
+        "%s -> %s",
+        match_attribute_value,
+        res.data[0].latest["ATTRIBUTE"][get_attribute_key].value,
     )
     return res.data[0].latest["ATTRIBUTE"][get_attribute_key].value
 
@@ -101,10 +105,16 @@ if __name__ == "__main__":
         required=True,
     )
     argparser.add_argument(
-        "--username", type=str, help="ThingsBoard username", required=True
+        "--username",
+        type=str,
+        help="ThingsBoard username",
+        required=True,
     )
     argparser.add_argument(
-        "--password", type=str, help="ThingsBoard password", required=True
+        "--password",
+        type=str,
+        help="ThingsBoard password",
+        required=True,
     )
     argparser.add_argument(
         "--csv",
@@ -119,7 +129,10 @@ if __name__ == "__main__":
         required=True,
     )
     argparser.add_argument(
-        "--verbose", "-v", action="store_true", help="Enable debug logging"
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Enable debug logging",
     )
     args = argparser.parse_args()
 
