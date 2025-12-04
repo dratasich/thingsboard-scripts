@@ -3,6 +3,7 @@
 Contents:
 * device
   * echo attribute updates
+  * RPC demo
 * export
   * get attribute per device name (from devices in a csv list)
 
