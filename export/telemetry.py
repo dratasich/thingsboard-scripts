@@ -148,6 +148,8 @@ if __name__ == "__main__":
     all_meta: list[dict] = []
     for device_id in device_ids:
         meta = {
+            "host": args.host,
+            "profile": args.device_profile,
             "device_id": device_id,
             "telemetry": {},
         }
@@ -212,31 +214,37 @@ if __name__ == "__main__":
                     row[key] = value
 
             # append to dataframe
-            df_part = pd.DataFrame.from_records(list(records.values())).sort_values(
-                "ts",
-            )
-            df = pd.concat([df, df_part], ignore_index=True)
+            if len(records) > 0:
+                df_part = pd.DataFrame.from_records(list(records.values()))
+                df = pd.concat([df, df_part], ignore_index=True)
 
             # increment time window
             dt_current += batch_window
+
+        if len(df) == 0:
+            logger.warning(f"No telemetry data for device {device_id}")
+            continue
 
         df = df.sort_values("ts")
         logger.debug(f"Telemetry for {device_id} from {dt_start} to {dt_end}\n{df}")
 
         # save to file
-        output_file = (
-            f"{dt_start.date()}_{dt_end.date()}_{device_id}.{args.output_format}"
-        )
+        output_file = f"{dt_start.date()}_{dt_end.date()}_{device_id}"
         if args.output_format == "csv":
-            df.to_csv(output_file, index=False)
+            df.to_csv(output_file + ".csv", index=False)
         elif args.output_format == "parquet":
-            df.to_parquet(output_file, index=False)
+            df.to_parquet(
+                output_file + ".snappy.parquet",
+                compression="snappy",
+                index=False,
+            )
         logger.info(f"Saved telemetry data for device {device_id} to {output_file}")
         meta["telemetry"]["file"] = output_file
         meta["telemetry"]["size"] = len(df)
 
+        all_meta.append(meta)
+
     # save metadata
-    all_meta.append(meta)
     meta_file = f"{dt_start.date()}_{dt_end.date()}_metadata.json"
     with open(meta_file, "w") as f:  # noqa: PTH123
         json.dump(all_meta, f, indent=2)
