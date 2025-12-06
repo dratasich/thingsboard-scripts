@@ -148,6 +148,8 @@ if __name__ == "__main__":
     all_meta: list[dict] = []
     for device_id in device_ids:
         meta = {
+            "host": args.host,
+            "profile": args.device_profile,
             "device_id": device_id,
             "telemetry": {},
         }
