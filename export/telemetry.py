@@ -212,13 +212,16 @@ if __name__ == "__main__":
                     row[key] = value
 
             # append to dataframe
-            df_part = pd.DataFrame.from_records(list(records.values())).sort_values(
-                "ts",
-            )
-            df = pd.concat([df, df_part], ignore_index=True)
+            if len(records) > 0:
+                df_part = pd.DataFrame.from_records(list(records.values()))
+                df = pd.concat([df, df_part], ignore_index=True)
 
             # increment time window
             dt_current += batch_window
+
+        if len(df) == 0:
+            logger.warning(f"No telemetry data for device {device_id}")
+            continue
 
         df = df.sort_values("ts")
         logger.debug(f"Telemetry for {device_id} from {dt_start} to {dt_end}\n{df}")
