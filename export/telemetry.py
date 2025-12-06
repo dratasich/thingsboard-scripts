@@ -240,8 +240,9 @@ if __name__ == "__main__":
         meta["telemetry"]["file"] = output_file
         meta["telemetry"]["size"] = len(df)
 
+        all_meta.append(meta)
+
     # save metadata
-    all_meta.append(meta)
     meta_file = f"{dt_start.date()}_{dt_end.date()}_metadata.json"
     with open(meta_file, "w") as f:  # noqa: PTH123
         json.dump(all_meta, f, indent=2)
