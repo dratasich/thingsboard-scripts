@@ -6,6 +6,7 @@ Contents:
   * RPC demo
 * export
   * get attribute per device name (from devices in a csv list)
+  * download timeseries of all devices given a device profile
 
 ## Run
 
