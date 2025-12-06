@@ -229,13 +229,15 @@ if __name__ == "__main__":
         logger.debug(f"Telemetry for {device_id} from {dt_start} to {dt_end}\n{df}")
 
         # save to file
-        output_file = (
-            f"{dt_start.date()}_{dt_end.date()}_{device_id}.{args.output_format}"
-        )
+        output_file = f"{dt_start.date()}_{dt_end.date()}_{device_id}"
         if args.output_format == "csv":
-            df.to_csv(output_file, index=False)
+            df.to_csv(output_file + ".csv", index=False)
         elif args.output_format == "parquet":
-            df.to_parquet(output_file, index=False)
+            df.to_parquet(
+                output_file + ".snappy.parquet",
+                compression="snappy",
+                index=False,
+            )
         logger.info(f"Saved telemetry data for device {device_id} to {output_file}")
         meta["telemetry"]["file"] = output_file
         meta["telemetry"]["size"] = len(df)

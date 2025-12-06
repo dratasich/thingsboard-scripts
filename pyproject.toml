@@ -9,6 +9,7 @@ dependencies = [
     "loguru>=0.7.3",
     "paho-mqtt>=2.1.0",
     "pandas>=2.3.3",
+    "pyarrow>=22.0.0",
     "tb-rest-client>=4.2.1",
 ]
 
