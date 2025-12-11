@@ -91,10 +91,14 @@ if __name__ == "__main__":
         help="Output format for the telemetry data",
     )
     argparser.add_argument(
+        "--device-id",
+        type=str,
+        help="ThingsBoard device ID to get telemetry for",
+    )
+    argparser.add_argument(
         "--device-profile",
         type=str,
         help="ThingsBoard device profile name to get telemetry for",
-        required=True,
     )
     argparser.add_argument(
         "--start-time",
@@ -135,24 +139,33 @@ if __name__ == "__main__":
     tb.token_login(token)
 
     # get all devices of the profile
-    logger.info(f"Get devices of profile {args.device_profile}...")
-    res = tb.entity_query_controller.find_entity_data_by_query_using_post(
-        async_req=False,
-        body=device_query(args.device_profile),
-    )
-    device_ids = [r.entity_id.id for r in res.data]
-    logger.trace(f"Device IDs: {device_ids}")
-    logger.info(f"Found {len(device_ids)} devices of profile {args.device_profile}")
+    device_ids: list[str] = []
+    if args.device_profile:
+        logger.info(f"Get devices of profile {args.device_profile}...")
+        res = tb.entity_query_controller.find_entity_data_by_query_using_post(
+            async_req=False,
+            body=device_query(args.device_profile),
+        )
+        device_ids = [r.entity_id.id for r in res.data]
+        logger.trace(f"Device IDs: {device_ids}")
+        logger.info(f"Found {len(device_ids)} devices of profile {args.device_profile}")
+    elif args.device_id:
+        device_ids = [args.device_id]
+        logger.info(f"Get telemetry for device ID {args.device_id}")
+    else:
+        logger.error("Either --device-profile or --device-id must be specified")
+        sys.exit(1)
 
     # collect device data
     all_meta: list[dict] = []
     for device_id in device_ids:
         meta = {
             "host": args.host,
-            "profile": args.device_profile,
             "device_id": device_id,
             "telemetry": {},
         }
+        if args.device_profile:
+            meta["device_profile"] = args.device_profile
 
         # --- attributes ---
         logger.debug(f"Get attributes for device {device_id}...")
