@@ -1,6 +1,6 @@
 [project]
 name = "thingsboard-scripts"
-version = "0.2.0"
+version = "0.3.0"
 description = "Scripts to test TB features and export data"
 readme = "README.md"
 requires-python = ">=3.12"

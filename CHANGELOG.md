@@ -1,3 +1,11 @@
+## 0.3.0 (2025-12-11)
+
+### Feat
+
+- **telemetry**: add interval to metadata
+- **telemetry**: append metadata to log multiple runs
+- **telemetry**: support export of single device telemetry
+
 ## 0.2.0 (2025-12-11)
 
 ### Feat
