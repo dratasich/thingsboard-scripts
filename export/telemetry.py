@@ -264,9 +264,15 @@ if __name__ == "__main__":
     try:
         # if file exists, append the new metadata
         with open(meta_file) as f:  # noqa: PTH123
-            existing_meta = json.load(f)
-            all_meta = existing_meta + all_meta
-            logger.debug("Append to existing metadata")
+            try:
+                existing_meta = json.load(f)
+                all_meta = existing_meta + all_meta
+                logger.debug("Append to existing metadata")
+            except json.JSONDecodeError:
+                meta_file = datetime.now(UTC).strftime(
+                    "metadata_%Y-%m-%dT%H:%M:%S.json",
+                )
+                logger.warning(f"Failed to decode JSON -> write to {meta_file}")
         # caveat: possible race condition if multiple instances run simultaneously
     except FileNotFoundError:
         # file does not exist, create a new one -> continue below
