@@ -258,7 +258,17 @@ if __name__ == "__main__":
         all_meta.append(meta)
 
     # save metadata
-    meta_file = f"{dt_start.date()}_{dt_end.date()}_metadata.json"
+    meta_file = "metadata.json"
+    try:
+        # if file exists, append the new metadata
+        with open(meta_file) as f:  # noqa: PTH123
+            existing_meta = json.load(f)
+            all_meta = existing_meta + all_meta
+            logger.debug("Append to existing metadata")
+        # caveat: possible race condition if multiple instances run simultaneously
+    except FileNotFoundError:
+        # file does not exist, create a new one -> continue below
+        pass
     with open(meta_file, "w") as f:  # noqa: PTH123
         json.dump(all_meta, f, indent=2)
     logger.info(f"Saved metadata to {meta_file}")
