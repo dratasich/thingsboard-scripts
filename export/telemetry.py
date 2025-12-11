@@ -162,6 +162,8 @@ if __name__ == "__main__":
         meta = {
             "host": args.host,
             "device_id": device_id,
+            "start_time": args.start_time,
+            "end_time": args.end_time,
             "telemetry": {},
         }
         if args.device_profile:
