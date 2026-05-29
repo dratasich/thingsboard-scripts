@@ -1,3 +1,13 @@
+## 0.4.0 (2026-05-29)
+
+### Feat
+
+- add (simple) cleanup telemetries script
+
+### Fix
+
+- **cleanup**: delete future telemetry keys too
+
 ## 0.3.0 (2025-12-11)
 
 ### Feat
