@@ -151,7 +151,9 @@ class TBClient:
                 headers=headers,
                 params={
                     "keys": ",".join(keys),
-                    "deleteAllDataForKeys": "true",
+                    # delete also future keys (deleteAllDataForKeys does not work)
+                    "startTs": "0",
+                    "endTs": "1831258395930000",
                 },
                 timeout=_TIMEOUT,
             )
